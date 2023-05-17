@@ -1,0 +1,49 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+#define BUFFER_SIZE 100
+
+int main() {
+    char filename[100];
+    char buffer[BUFFER_SIZE];
+
+    printf("Enter the filename: ");
+    scanf("%s", filename);
+
+    // Open the file with write-only mode and create it if it doesn't exist
+    int fileDescriptor = open(filename, O_WRONLY | O_CREAT, 0644);
+    if (fileDescriptor == -1) {
+        perror("Error opening the file");
+        exit(1);
+    }
+
+    printf("Enter data to write into the file (press Ctrl+D to finish):\n");
+
+    // Read data from the user and write it to the file
+    while (fgets(buffer, BUFFER_SIZE, stdin) != NULL) {
+        write(fileDescriptor, buffer, strlen(buffer));
+    }
+
+    close(fileDescriptor);
+
+    // Open the file with read-only mode
+    fileDescriptor = open(filename, O_RDONLY);
+    if (fileDescriptor == -1) {
+        perror("Error opening the file");
+        exit(1);
+    }
+
+    printf("\nData read from the file:\n");
+
+    // Read data from the file and print it to the console
+    ssize_t bytesRead;
+    while ((bytesRead = read(fileDescriptor, buffer, BUFFER_SIZE)) > 0) {
+        write(STDOUT_FILENO, buffer, bytesRead);
+    }
+
+    close(fileDescriptor);
+
+    return 0;
+}

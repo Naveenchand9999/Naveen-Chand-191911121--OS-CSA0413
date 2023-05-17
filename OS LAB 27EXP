@@ -1,0 +1,52 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <semaphore.h>
+
+sem_t S;
+
+void* process(void* id)
+{
+    int process_id = *(int*)id;
+    
+    // Perform wait operation on semaphore S
+    printf("Process %d is waiting on semaphore S\n", process_id);
+    sem_wait(&S);
+    printf("Process %d has acquired semaphore S\n", process_id);
+    
+    // Critical section
+    printf("Process %d is in the critical section\n", process_id);
+    
+    // Perform signal operation on semaphore S
+    printf("Process %d is releasing semaphore S\n", process_id);
+    sem_post(&S);
+    
+    pthread_exit(NULL);
+}
+
+int main()
+{
+    int n = 4; // Number of processes
+    sem_init(&S, 0, 4); // Initialize semaphore S with 4 instances
+    
+    // Create threads for each process
+    pthread_t threads[n];
+    int process_ids[n];
+    for(int i = 0; i < n; i++)
+    {
+        process_ids[i] = i + 1;
+        pthread_create(&threads[i], NULL, process, &process_ids[i]);
+    }
+    
+    // Wait for all threads to finish
+    for(int i = 0; i < n; i++)
+        pthread_join(threads[i], NULL);
+    
+    // Another process wants the same resource
+    printf("Another process wants the same resource\n");
+    printf("Current value of semaphore S is %d\n", sem_getvalue(&S, NULL));
+    printf("The process can perform wait operation on semaphore S and wait until a resource is available\n");
+    
+    sem_destroy(&S);
+    return 0;
+}
